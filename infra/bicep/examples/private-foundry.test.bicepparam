@@ -1,3 +1,14 @@
+/*
+This parameter file is used to deploy the private-foundry Bicep module.
+
+Usage:
+  az deployment group create -g <resource-group-name> --parameters private-foundry.test.bicepparam
+
+Replace <resource-group-name> with your target Azure Resource Group.
+
+Ensure you have the necessary permissions and that the referenced Bicep module and parameter file are accessible.
+*/
+
 using '../private-foundry.bicep'
 
 // AI Account Configuration
