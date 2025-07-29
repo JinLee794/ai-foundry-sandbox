@@ -289,29 +289,73 @@ Secure access to the private AI Foundry environment requires one of:
 - **DNS Strategy:** Plan private DNS zone integration with existing infrastructure
 - **Security Review:** Validate private endpoint and firewall configurations
 
-### 3. Deploy Using Bicep Templates
-The project-centric model with network isolation is **only supported through Bicep template deployment**:
+### 3. Deploy Using Bicep Templates (WIP)
+The project-centric model with network isolation is **only supported through Bicep template deployment**. This repository provides a complete Bicep template for deploying a private AI Foundry environment:
 
 ```bash
-# Clone the official Azure AI Foundry samples repository
-git clone https://github.com/azure-ai-foundry/foundry-samples.git
+# Clone this repository
+git clone https://github.com/JinLee794/ai-foundry-sandbox.git
+cd ai-foundry-sandbox
 
-# Navigate to the private networking template
-cd foundry-samples/samples/microsoft/infrastructure-setup/15-private-network-standard-agent-setup
+# Configure your deployment parameters
+# Edit infra/bicep/examples/private-foundry.test.bicepparam with your specific settings
 
 # Deploy the Bicep template
 az deployment group create \
   --resource-group <your-resource-group> \
-  --template-file main.bicep \
-  --parameters @parameters.json
+  --template-file infra/bicep/private-foundry.bicep \
+  --parameters infra/bicep/examples/private-foundry.test.bicepparam
+```
+
+**Template Configuration (`private-foundry.test.bicepparam`):**
+```bicep
+// AI Account Configuration
+param accountName = 'your-aifoundry-account'
+param location = 'eastus2'
+
+// Model Configuration  
+param modelName = 'gpt-4o'
+param modelFormat = 'OpenAI'
+param modelVersion = '2024-08-06'
+param modelSkuName = 'GlobalStandard'
+param modelCapacity = 10
+
+// Network Configuration
+param virtualNetworkName = 'ai-foundry-private-vnet'
+param virtualNetworkAddressPrefix = '10.0.0.0/16'
+param agentSubnetAddressPrefix = '10.0.1.0/24'
+param privateEndpointSubnetAddressPrefix = '10.0.2.0/24'
+
+// Project Configuration
+param projectName = 'your-project-name'
+param projectCapHost = 'your-capability-host'
+
+// Unique suffix for resource naming
+param uniqueSuffix = 'prod001'
 ```
 
 **Key Template Features:**
-- Automated provisioning of Azure AI Foundry resource and project
-- GPT-4o model deployment
-- Private endpoint configuration for all services
-- Network injection setup for Agent service
-- Microsoft-managed encryption keys (default)
+- **Network Infrastructure:** Creates VNet with dedicated subnets for agent injection (`Microsoft.App/environments` delegation) and private endpoints
+- **AI Foundry Account:** Deploys Azure AI Foundry resource with network injection enabled and public access disabled
+- **Model Deployment:** Automated GPT-4o model deployment with configurable capacity
+- **Project Creation:** Sets up AI Foundry project with network-secured configuration
+- **Capability Host Setup:** Configures project capability host for bring-your-own-resource scenarios
+- **System-Assigned Identity:** Enables managed identity for secure Azure resource access
+
+**Template Architecture:**
+
+The Bicep template follows a modular architecture with the following components:
+
+- **`private-foundry.bicep`** - Main orchestration template
+- **`foundry/network.bicep`** - VNet and subnet configuration with proper delegations
+- **`foundry/ai-account-identity.bicep`** - AI Foundry account with network injection
+- **`foundry/ai-project-identity.bicep`** - Project creation and configuration
+- **`foundry/add-project-capability-host.bicep`** - Capability host setup for external resources
+
+**Prerequisites:**
+- Target resource group must exist
+- Virtual network (if existing) must be in the same region as AI Foundry resources
+- Required Azure resource providers must be registered in your subscription
 
 ### 4. Configure Project-Level Resources
 - **Model Deployments:** Deploy required AI models (Azure OpenAI, partner models)
