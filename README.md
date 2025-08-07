@@ -1,68 +1,71 @@
+
 # AI Foundry Deployment Model Update
 
 ## Overview
-AI Foundry is evolving its deployment architecture. We are moving away from the legacy **hub-based** model to a **project-centric** approach. This change is designed to provide greater flexibility, improved resource isolation, and enhanced scalability for your AI workloads.
+Azure AI Foundry is transitioning to a unified platform-as-a-service offering, evolving from the legacy **hub-based** model to a **project-centric** approach. This change is designed to provide greater flexibility, improved resource management, and enhanced scalability for your AI workloads.
 
 The project-centric model aligns with Azure AI Foundry's unified platform-as-a-service offering, delivering enterprise-grade infrastructure with streamlined management through unified Role-based access control (RBAC), networking, and policies under one Azure resource provider namespace.
 
-We are bringing this together to meet central governance requirements for models and agents—enabling fine-grained cost tracking, unified RBAC, consistent networking and policy management, and centralized audit logging for all models and agents in one place.
+Azure AI Foundry brings together agents, models, and tools under unified governance—enabling fine-grained cost tracking, unified RBAC, consistent networking and policy management, and centralized audit logging for all models and agents in one place. Previously, while resources were centrally connected and made available to projects, behind-the-scenes management was fragmented across multiple services causing fragmentation of RBAC, cost, and policy management.
 
 ---
 
 ## What's Changing?
 
 ### Legacy Hub-Based Model
-Previously, deployments were managed centrally via an Azure AI Hub resource. All projects and capabilities were provisioned under this hub, with:
-- Shared configurations across multiple projects
+Previously, deployments were managed centrally via an Azure AI Hub resource. Azure OpenAI and AI Services were connected to the hub so projects could use them, but deployments were managed on the individual Azure OpenAI and AI Services resources. This caused fragmentation of RBAC, cost, and policy management across multiple services. The hub provided:
+- Centralized resource connections and configurations
 - Hub-level security settings that cascade to projects
-- Centralized resource management and connections
+- Shared infrastructure with namespace isolation
 - Dependency on Azure Machine Learning infrastructure for certain capabilities
+- Fragmented management across up to 5 different Azure services behind the scenes
 
 ### New Project-Centric Model (Foundry Projects)
-Each project is now deployed and managed independently with an **Azure AI Foundry resource** as the foundation. This provides:
-- **Independent Project Management:** Each project operates with its own Azure AI Foundry resource
+Each project is now managed through an **Azure AI Foundry resource** with unified governance. This provides:
+- **Unified Resource Management:** Agents, models, and tools managed together under one Azure resource provider
 - **Native Agent Support:** Full support for Azure AI Agent Service with general availability
 - **Unified API Access:** Native support for Azure AI Foundry API to work with agents and across models
-- **Project-Level Isolation:** Files, threads, and outputs are isolated at the project level
-- **Direct Resource Provisioning:** Capabilities are provisioned directly at the project level
+- **Project-Level Organization:** Projects act as folders to organize work within the resource context
+- **Simplified Governance:** Centralized RBAC, cost tracking, and policy management
 - **Enhanced Model Access:** Direct access to models sold by Azure (Azure OpenAI, DeepSeek, xAI) and Partner & Community models through Marketplace
 
 ---
 
-## Why Redeployment Is Required
+## Why Migration Is Required
 
-If you have previously deployed AI Foundry using the hub-based model, you **must redeploy** using the new project-centric model. This is a fundamental architectural change that cannot be upgraded in-place due to several critical factors:
+**Important Clarification:** You do **not** need to redeploy your Azure AI Foundry resource itself. If you already have an Azure AI Foundry resource (formerly called "AI Services"), you can continue using it. You can also keep existing artifacts like model deployments.
 
-### 1. Network Injection Requirements
-The new project-centric model introduces **network injection** capabilities that require infrastructure-level changes:
-- **Container Injection:** The platform network hosts APIs and injects subnets into your virtual network for local communication
-- **Agent Service Integration:** Network-secured Standard Agents support full network isolation through network injection of the Agent client into your Azure virtual network
-- **Subnet Delegation:** Requires dedicated subnet delegation to `Microsoft.App/environments` that cannot be updated after deployment
+However, to access the latest capabilities and unified governance model, you **must create new projects** within your Azure AI Foundry resource. Here's what needs to be created or migrated:
 
-### 2. Private Networking Architecture
-The project-centric model mandates a fully private networking configuration:
-- **Account-Level Network Injection:** Network security is implemented at the Azure AI Foundry account level
-- **End-to-End Network Isolation:** Complete isolation from public internet with private endpoints for all components
-- **Subnet Requirements:** Specific subnet configurations with IP ranges under `172.16.0.0/12` or `192.168.0.0/16`
+### 1. Project Creation Requirements
+- **New Foundry Projects:** Must be created within your existing or new Azure AI Foundry resource
+- **Agent Recreation:** Any existing agents must be recreated and re-run in the new project structure
+- **Project-Level Capabilities:** For network-secured Standard Agent setups, supporting resources (CosmosDB, Search, Storage) can be:
+  - Shared at the parent resource level across projects
+  - Overridden at the individual project level
+  - Managed exclusively at the project level
+- **Data Isolation:** In all configurations, data isolation is maintained at the container level
 
-### 3. Project-Level Capabilities
-Capabilities are now provisioned and managed at the individual project level:
-- **Azure Storage Account:** Dedicated storage for project files and artifacts
-- **Azure AI Search:** Search capabilities provisioned per project for RAG scenarios
-- **Azure Cosmos DB:** Thread and message storage for Agent service
-- **Resource Isolation:** Each project maintains its own set of dependencies
+### 2. Architecture Migration Benefits
+The transition addresses several key improvements:
 
-### 4. Infrastructure Dependencies
-The new model requires specific infrastructure components that are incompatible with hub-based deployments:
-- **Bicep Template Deployment:** Network-secured environments are only supported through Bicep template deployment
-- **Private DNS Zones:** Requires specific private DNS zone configurations for each service type
-- **Private Endpoints:** Dedicated private endpoints for Azure AI Foundry, Storage, AI Search, and Cosmos DB resources
+#### Unified Governance Model
+- **Centralized Management:** Previously fragmented management across 5 services is now unified
+- **RBAC Consolidation:** Role-based access control is now managed consistently under one namespace
+- **Cost Tracking:** Fine-grained cost analysis for models and agents in one place
+- **Policy Management:** Consistent networking and policy management across all components
 
-### 5. API and SDK Changes
-The Azure AI Agent Service in Azure AI Foundry uses project endpoints instead of connection strings:
-- **Endpoint Migration:** Move from hub-based connection strings to project-based endpoints
+#### API and SDK Modernization
+- **Project Endpoints:** The Azure AI Agent Service uses project endpoints instead of connection strings
 - **SDK Compatibility:** Current SDK versions support the new project-centric endpoint model
-- **Authentication Model:** Updated authentication mechanisms for project-centric access
+- **Unified API:** Azure AI Foundry API provides consistent contracts across model providers
+
+### 3. What Can Be Preserved
+- **Existing Model Deployments:** Azure OpenAI and other model deployments can be reused
+- **Data Files:** Project files and artifacts can be migrated
+- **Fine-tuned Models:** Custom models can be carried forward
+- **Vector Stores:** Existing vector stores can be accessed
+- **Connections:** Resource connections can be recreated (not automatically migrated)
 
 ---
 
@@ -70,64 +73,54 @@ The Azure AI Agent Service in Azure AI Foundry uses project endpoints instead of
 
 ### Legacy Hub-Based Model vs. Current Project-Centric Model
 
-The core difference between the two models is **resource sharing** (legacy) versus **complete isolation** (project-centric):
+The core difference between the two models is **fragmented management** (legacy) versus **unified governance** (project-centric):
 
 | Aspect                | Legacy Hub-Based Model                                 | Project-Centric Model (Current)                |
 |-----------------------|-------------------------------------------------------|------------------------------------------------|
-| **Resource Management** | Centralized via Azure AI Hub<br>Shared infrastructure (storage, key vault, registry, AI Search, Cosmos DB) | Each project has its own dedicated resources (storage, AI Search, Cosmos DB, private endpoints) |
-| **Isolation**         | Namespace isolation within shared resources           | Full resource and network isolation per project |
-| **Access**            | Public internet access to hub and resources           | Private network only (VPN/ExpressRoute/Bastion required) |
-| **Networking**        | Shared virtual network (if any)                       | Dedicated private virtual network per project   |
-| **Security**          | Hub-level security cascades to projects               | Project-level security and RBAC                |
-| **Scalability**       | Limited by shared infrastructure                      | Independent scaling per project                |
+| **Resource Management** | Azure OpenAI/AI Services connected to hub<br>Deployments managed on individual services<br>Fragmented across ~5 services | Unified management under Azure AI Foundry resource<br>Agents, models, tools managed together |
+| **Governance**         | Fragmented RBAC/cost/policy across services           | Centralized RBAC, cost tracking, policy management |
+| **Project Organization** | Projects inherit from hub configurations               | Projects as folders within resource context    |
+| **API Access**        | Connection strings and multiple service endpoints      | Unified Azure AI Foundry API with project endpoints |
+| **Agent Support**     | Preview agents with limited capabilities               | General availability with full feature set    |
+| **Data Isolation**    | Namespace isolation within shared resources           | Container-level isolation with flexible resource sharing options |
 
 > **Summary:**  
-> The legacy model pools resources for all projects under a single hub, while the project-centric model provisions a fully isolated, secure, and independently managed environment for each project.
+> The legacy model required managing multiple Azure services with fragmented governance, while the project-centric model provides unified management and governance under a single Azure AI Foundry resource.
 
 ## Key Components of the Project-Centric Architecture
 
 ### Current Project-Centric Model
 
-The project-centric model provides dedicated resources for each project with full network isolation and independent scaling.
+The project-centric model provides unified management through Azure AI Foundry resource with flexible resource sharing options.
 
 ```mermaid
 flowchart TB
-    %% Project 1
-    subgraph Project1["Foundry Project 1"]
-        F1[AI Foundry Resource]
-        S1[Project Storage]
-        AI1[AI Search]
-        C1[Cosmos DB]
+    %% Azure AI Foundry Resource
+    subgraph FoundryResource["Azure AI Foundry Resource"]
+        Management[Resource Management<br/>RBAC, Policies, Connections]
+        Models[Model Deployments<br/>Azure OpenAI, Partner Models]
+        API[Unified Foundry API]
     end
 
-    %% Project 2
-    subgraph Project2["Foundry Project 2"]
-        F2[AI Foundry Resource]
-        S2[Project Storage]
-        AI2[AI Search]
-        C2[Cosmos DB]
+    %% Projects as Folders
+    subgraph Projects["Foundry Projects (Folders)"]
+        P1[Project 1<br/>Agents, Files, Evaluations]
+        P2[Project 2<br/>Agents, Files, Evaluations]
+        P3[Project 3<br/>Agents, Files, Evaluations]
     end
 
-    %% Networking
-    subgraph Networking["Private Networking"]
-        VNet[Virtual Network]
-        PE1[Private Endpoints]
-        PE2[Private Endpoints]
+    %% Supporting Resources (Flexible Configuration)
+    subgraph SupportingResources["Supporting Resources"]
+        Storage[Azure Storage<br/>Shared or Project-specific]
+        Search[Azure AI Search<br/>Shared or Project-specific]
+        Cosmos[Cosmos DB<br/>Shared or Project-specific]
     end
 
-    %% Connections for Project 1
-    F1 --> S1
-    F1 --> AI1
-    F1 --> C1
-    Project1 --> PE1
-    PE1 --> VNet
-
-    %% Connections for Project 2
-    F2 --> S2
-    F2 --> AI2
-    F2 --> C2
-    Project2 --> PE2
-    PE2 --> VNet
+    %% Connections
+    FoundryResource --> Projects
+    Projects -.-> SupportingResources
+    FoundryResource --> Models
+    Projects --> API
 ```
 
 **Legacy Hub-Based Model Architecture**
@@ -206,91 +199,123 @@ flowchart TB
 ### Core Infrastructure Components
 
 #### 1. Azure AI Foundry Resource
-- **Primary Resource:** The foundational resource that provides access to agent services, models, and Azure OpenAI services
+- **Primary Resource:** The foundational resource that provides unified access to agents, models, and Azure OpenAI services
 - **Unified Management:** Single resource for managing projects, deployments, and connections
-- **Network Isolation:** Supports private endpoints with DNS zones `privatelink.cognitiveservices.azure.com`, `privatelink.openai.azure.com`, and `privatelink.services.ai.azure.com`
+- **Flexible Networking:** Supports both public and private network configurations
+- **Resource Provider:** Built on `Microsoft.CognitiveServices` for consistent governance and policy management
 
-#### 2. Project-Level Capabilities
-Each project requires its own set of dedicated resources:
+#### 2. Project-Level Organization
+Projects act as organizational folders within the Azure AI Foundry resource:
+
+**Project Capabilities**
+- Agent development and management
+- File storage and organization  
+- Evaluation workflows
+- Model access and usage
+- Container-level data isolation
+
+**Supporting Resources (Flexible Configuration)**
+For Standard Agent setups, supporting resources can be configured flexibly:
 
 **Azure Storage Account**
-- Stores project files, artifacts, and agent data
-- Requires both `blob` and `file` private endpoints
-- Private DNS zone: `privatelink.blob.core.windows.net`
-- Supports Microsoft-managed or customer-managed encryption keys
+- **Shared Configuration:** Resource-level storage shared across all projects
+- **Project-Specific:** Dedicated storage per project for enhanced isolation
+- **Hybrid Approach:** Override shared configuration at individual project level
 
 **Azure AI Search**
-- Provides search capabilities for RAG (Retrieval-Augmented Generation) scenarios
-- Enables semantic search and vector search capabilities
-- Private DNS zone: `privatelink.search.windows.net`
-- Connects to projects via secure connections
+- **Shared Configuration:** Central search service accessible to all projects
+- **Project-Specific:** Dedicated search instances for sensitive workloads
+- **Use Case Driven:** Choose based on data sensitivity and performance requirements
 
 **Azure Cosmos DB for NoSQL**
-- Stores agent threads, messages, and conversation history
-- Minimum throughput requirement: 3000 RU/s total
-- Three containers provisioned per project (1000 RU/s each)
-- Private DNS zone: `privatelink.documents.azure.com`
-- Built on DiskANN for efficient vector search
+- **Shared Configuration:** Central database with container-level isolation
+- **Project-Specific:** Dedicated database instances for compliance requirements
+- **Data Isolation:** All configurations maintain data separation at container level
 
-#### 3. Network Architecture Requirements
+#### 3. Network Architecture (Optional Private Deployment)
 
-**Virtual Network Configuration**
+For organizations requiring private networking, the following components are available:
+
+**Virtual Network Configuration (When Using Private Networking)**
 - Two dedicated subnets required:
   - **Private endpoint subnet** (for all private endpoints)
   - **Agent injection subnet** (with `Microsoft.App/environments` delegation)
-- IP address ranges must be within `172.16.0.0/12` or `192.168.0.0/16`
-- **Agent subnet exclusivity:** Each Azure AI Foundry resource must use a dedicated agent subnet - the agent subnet cannot be shared between multiple AI Foundry resources
+- **Agent subnet exclusivity:** Each Azure AI Foundry resource must use a dedicated agent subnet
 
-**Private Endpoint Configuration**
+**Private Endpoint Configuration (When Using Private Networking)**
 - Azure AI Foundry resource private endpoint
-- Storage account private endpoints (blob and file)
+- Storage account private endpoints (blob and file) 
 - Azure AI Search private endpoint
 - Cosmos DB private endpoint
 - All resources must be in the same Azure region as the virtual network
 
-**DNS Configuration**
-- Private DNS zones for each service type
-- Conditional forwarders to Azure DNS Virtual Server (168.63.129.16)
-- Integration with existing DNS infrastructure
-
 ### Security and Access Control
 
-#### 1. Network Security
-- **Public Network Access:** All resources configured with Public Network Access (PNA) disabled
-- **Zero Trust Architecture:** No public internet access to any component
-- **Network Isolation:** Complete traffic isolation within virtual network boundaries
-- **Data Exfiltration Protection:** Network injection prevents unauthorized data movement
+#### 1. Network Security (Optional Private Configuration)
+- **Flexible Access:** Supports both public internet access and private network configurations
+- **Private Network Option:** Complete network isolation for enhanced security
+- **Zero Trust Architecture:** Optional deployment with no public internet access
+- **Network Injection:** Available for Standard Agents requiring private connectivity
 
 #### 2. Access Methods
-Secure access to the private AI Foundry environment requires one of:
+**Public Access (Default)**
+- Direct internet access to Azure AI Foundry portal and APIs
+- Standard authentication via Microsoft Entra ID
+- API key authentication supported for simplified integration
+
+**Private Access (Optional)**
+For organizations requiring private networking:
 - **Azure Bastion:** Jump box VM within the virtual network
 - **VPN Gateway:** Point-to-site or site-to-site VPN connections
 - **ExpressRoute:** Private connection from on-premises networks
 
 #### 3. Identity and Authentication
 - **Managed Identity Support:** System-assigned or user-assigned managed identities
-- **Azure RBAC:** Fine-grained role-based access control
+- **Azure RBAC:** Fine-grained role-based access control at resource and project levels
 - **API Key Authentication:** Optional for simplified integration scenarios
-- **Microsoft Entra ID Integration:** Centralized identity management
+- **Microsoft Entra ID Integration:** Centralized identity management with passthrough authentication options
 
 ---
 
 ## Migration Steps
 
-### 1. Review Existing Deployments
-- **Inventory Assessment:** Identify all current hub-based AI Foundry deployments
-- **Data Mapping:** Document existing connections, models, and data dependencies
-- **Dependency Analysis:** Map out all Azure resources and their relationships
-- **Access Patterns:** Document current user access methods and requirements
+### 1. Assess Current Environment
+- **Resource Inventory:** Identify your existing Azure AI Foundry resource (formerly "AI Services")
+- **Model Deployments:** Document existing Azure OpenAI and model deployments (these can be reused)
+- **Agent Inventory:** List current agents that will need to be recreated
+- **Connection Mapping:** Document current connections to external services and data sources
 
-### 2. Prepare Infrastructure Requirements
-- **Network Planning:** Design virtual network architecture with required subnets
-- **Resource Planning:** Plan Azure regions for all components (must be co-located)
-- **DNS Strategy:** Plan private DNS zone integration with existing infrastructure
-- **Security Review:** Validate private endpoint and firewall configurations
+### 2. Locate Your Azure AI Foundry Resource
+Most organizations already have an Azure AI Foundry resource. If you don't have one:
+- **Create AI Foundry Resource:** Deploy a new Azure AI Foundry resource in your desired region
+- **Connect Existing Services:** Link your existing Azure OpenAI resources via connections
+- **Preserve Deployments:** Existing model deployments can continue to be used
 
-### 3. Deploy Using Bicep Templates (WIP)
-The project-centric model with network isolation is **only supported through Bicep template deployment**. This repository provides a complete Bicep template for deploying a private AI Foundry environment:
+### 3. Create New Foundry Projects
+Projects are organizational folders within your Azure AI Foundry resource:
+- **Project Creation:** Create projects for each use case or application
+- **Resource Configuration:** Choose resource sharing approach:
+  - **Shared Resources:** Use resource-level storage, search, and Cosmos DB across projects
+  - **Project-Specific:** Dedicated resources per project for enhanced isolation
+  - **Hybrid:** Override shared settings at project level as needed
+
+### 4. Configure Supporting Resources (For Standard Agents)
+**Flexible Resource Configuration Options:**
+
+**Option A: Shared Resource Model**
+- Single Azure Storage account shared across all projects
+- Centralized Azure AI Search service
+- Shared Cosmos DB with container-level data isolation
+
+**Option B: Project-Specific Model**  
+- Dedicated Azure Storage per project
+- Individual Azure AI Search instances per project
+- Separate Cosmos DB instances for strict compliance
+
+**Option C: Hybrid Model**
+- Start with shared resources
+- Override with project-specific resources where needed
+- Maintain container-level data isolation in all configurations
 
 ```bash
 # Clone this repository
@@ -300,7 +325,7 @@ cd ai-foundry-sandbox
 # Configure your deployment parameters
 # Edit infra/bicep/examples/private-foundry.test.bicepparam with your specific settings
 
-# Deploy the Bicep template
+# Deploy the Bicep template for private networking
 az deployment group create \
   --resource-group <your-resource-group> \
   --template-file infra/bicep/private-foundry.bicep \
@@ -357,59 +382,70 @@ The Bicep template follows a modular architecture with the following components:
 - Virtual network (if existing) must be in the same region as AI Foundry resources
 - Required Azure resource providers must be registered in your subscription
 
-### 4. Configure Project-Level Resources
-- **Model Deployments:** Deploy required AI models (Azure OpenAI, partner models)
-- **Connections Setup:** Configure connections to external data sources
-- **Capability Hosts:** Set up bring-your-own-resource configurations if needed
-- **Agent Configuration:** Configure Standard Agents with network injection
+### 6. Recreate Connections and Agents
+- **Connection Recreation:** Manually recreate connections to external data sources and services
+- **Agent Migration:** Recreate agents using the new Azure AI Foundry SDK with project endpoints
+- **Code Updates:** Update applications to use project endpoints instead of connection strings
+- **SDK Upgrade:** Install latest SDK versions for project-centric model support
 
-### 5. Data and Workload Migration
-- **Agent Migration:** No direct upgrade path from hub-based agents - manual recreation required
-- **Thread Data:** Agent threads and messages must be manually migrated
+### 7. Data and Workload Migration
 - **Model Deployments:** Existing Azure OpenAI deployments can be reused via connections
-- **Files and Artifacts:** Project files need to be re-uploaded to new project storage
+- **File Migration:** Upload project files to new project storage
+- **Agent Recreation:** Preview agents must be manually recreated (no direct upgrade path)
+- **Thread Data:** Agent threads and messages require manual migration if needed
 
-### 6. Validation and Testing
-- **Connectivity Testing:** Verify all private endpoint connections
-- **Agent Functionality:** Test agent operations and data access
-- **Performance Validation:** Ensure expected performance characteristics
-- **Security Verification:** Validate network isolation and access controls
+### 8. Validation and Testing
+- **Functionality Testing:** Verify all agent operations and model access
+- **Connection Validation:** Test connections to external data sources
+- **Performance Verification:** Ensure expected performance characteristics
+- **Security Testing:** Validate access controls and data isolation
 
-### 7. Decommission Legacy Resources
-- **Data Backup:** Ensure all critical data is migrated and validated
-- **Connection Updates:** Update all client applications to use new endpoints
-- **Resource Cleanup:** Remove old hub-based resources following proper sequence
-- **DNS Cleanup:** Remove old DNS entries and update records
+### 9. Clean Up Legacy Resources (Optional)
+- **Hub Assessment:** Evaluate if hub-based projects are still needed for unsupported features
+- **Resource Cleanup:** Remove unused hub-based projects following proper sequence
+- **Cost Optimization:** Monitor and optimize costs across new project structure
 
 ---
 
 ## Important Considerations
 
-### Regional Requirements
-- **Co-location Mandate:** All resources must be deployed in the same Azure region as the virtual network
-- **Model Deployment Exception:** You may connect to models deployed in different regions via AI Services connections
-- **Region Availability:** Verify Azure AI Foundry and model availability in target regions
+### Resource Preservation
+- **No Resource Redeployment Required:** Existing Azure AI Foundry resources can be reused
+- **Model Deployment Continuity:** Azure OpenAI and other model deployments can continue operating
+- **Connection Flexibility:** You may connect to models deployed in different regions via connections
+- **Incremental Migration:** Move to new projects gradually while maintaining existing deployments
 
-### Limitations and Constraints
-- **Deployment Method:** Network-secured environments only support Bicep template deployment (not UX, CLI, or SDK)
-- **Agent Types:** Only Standard Agents support network injection (not Light Agents)
-- **Subnet Management:** Agent subnet delegation cannot be modified after deployment - requires full redeployment
-- **SDK Compatibility:** Requires current SDK versions for project-based endpoints
+### Project Creation Requirements
+- **New Projects Only:** Must create new Foundry projects to access latest capabilities
+- **Agent Recreation:** Existing agents need to be recreated in new projects (no automatic migration)
+- **Resource Flexibility:** Choose shared, project-specific, or hybrid resource configurations
+- **Data Isolation:** Container-level isolation maintained in all resource sharing models
+
+### Regional and Deployment Considerations
+- **Regional Flexibility:** Azure AI Foundry resources can connect to models in different regions
+- **Deployment Methods:** Projects support multiple deployment approaches (portal, CLI, SDK, Bicep)
+- **Private Networking:** Network-secured environments require Bicep template deployment
+- **Agent Types:** Standard Agents (with private networking) vs. basic agents (public access)
 
 ### Cost Implications
-- **Resource Duplication:** Each project requires its own set of supporting resources
-- **Private Endpoints:** Additional costs for private endpoint usage
-- **Cosmos DB Throughput:** Minimum 3000 RU/s requirement per project
-- **Network Infrastructure:** VPN/ExpressRoute costs for secure access
+- **Resource Sharing Flexibility:** Choose cost model based on sharing vs. isolation requirements
+- **Shared Resources:** Lower costs with resource-level sharing across projects  
+- **Project-Specific Resources:** Higher isolation with dedicated resources per project
+- **Private Networking:** Additional costs for private endpoints and network infrastructure when required
+- **Cosmos DB Considerations:** Throughput costs vary by configuration (shared vs. dedicated)
 
 ---
 
 ## Documentation and References
 
 ### Official Microsoft Documentation
+- **[Azure AI Foundry Planning Guide](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/planning)** - Comprehensive organizational rollout and planning guidance
+- **[Azure AI Foundry Architecture](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/architecture)** - Complete architectural overview and computing infrastructure  
+- **[Project Migration Guide](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/migrate-project?tabs=azure-ai-foundry)** - Step-by-step migration from hub-based to Foundry projects
+- **[Azure AI Foundry Resource Creation (Terraform)](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/create-resource-terraform)** - Infrastructure as code deployment options
+- **[Build Recap: New Azure AI Foundry Resource](https://techcommunity.microsoft.com/blog/AIPlatformBlog/build-recap-new-azure-ai-foundry-resource-developer-apis-and-tools/4427241)** - Product announcements and new capabilities
 - **[Azure AI Foundry Private Link Configuration](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/configure-private-link?pivots=fdp-project)** - Comprehensive guide for configuring private networking
 - **[Network-Secured Agent Service](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/virtual-networks)** - Detailed instructions for private network agent deployment
-- **[Azure AI Foundry Architecture](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/architecture)** - Complete architectural overview and computing infrastructure
 - **[Project Types Comparison](https://learn.microsoft.com/en-us/azure/ai-foundry/what-is-azure-ai-foundry#types-of-projects)** - Detailed comparison between Foundry and hub-based projects
 
 ### Infrastructure Templates and Samples
@@ -442,11 +478,12 @@ The Bicep template follows a modular architecture with the following components:
 - **Azure Support:** For deployment issues and technical assistance, contact your Azure support representative
 
 ### Known Issues and Limitations
-- **Hub-to-Project Migration:** No automated migration path exists - manual recreation is required
-- **Data Transfer:** Agent threads, files, and vector stores must be manually migrated
-- **Regional Constraints:** All components must be deployed in the same region as the virtual network
-- **Template Dependency:** Private networking requires Bicep template deployment only (not UX, CLI, or SDK)
-- **Agent Subnet Updates:** Cannot modify agent subnet delegation after deployment - requires full redeployment
+- **Project Creation Required:** New projects must be created to access latest capabilities - no automatic upgrade
+- **Agent Recreation:** Existing agents must be manually recreated (no direct migration path)
+- **Connection Recreation:** Connections to external services must be manually recreated
+- **Feature Parity:** Some features may still require hub-based projects (see [feature comparison](https://learn.microsoft.com/en-us/azure/ai-foundry/what-is-azure-ai-foundry#which-type-of-project-do-i-need))
+- **Private Networking:** Network-secured environments require Bicep template deployment
+- **SDK Updates:** Latest SDK versions required for project endpoint support
 
 ### Best Practices
 - **Testing:** Always deploy in a development environment first to validate configurations
@@ -455,8 +492,5 @@ The Bicep template follows a modular architecture with the following components:
 - **Documentation:** Maintain detailed documentation of your specific configuration choices
 
 ---
-
-*Last Updated: January 2025*  
-*Azure AI Foundry Documentation Version: Latest*
 
 For questions or technical assistance with your migration, please contact your support representative or consult the official [Azure AI Foundry documentation](https://learn.microsoft.com/en-us/azure/ai-foundry/).
