@@ -28,22 +28,22 @@ param agentSubnetPrefix string = ''
 @description('Address prefix for the private endpoint subnet')
 param peSubnetPrefix string = ''
 
-// Create new VNet if needed
-module newVNet 'vnet.bicep' = if (!useExistingVnet) {
-  name: 'vnet-deployment'
-  params: {
-    location: location
-    vnetName: vnetName
-    agentSubnetName: agentSubnetName
-    peSubnetName: peSubnetName
-    vnetAddressPrefix: vnetAddressPrefix
-    agentSubnetPrefix: agentSubnetPrefix
-    peSubnetPrefix: peSubnetPrefix
-  }
-}
+// // Create new VNet if needed
+// module newVNet 'vnet.bicep' = if (!useExistingVnet) {
+//   name: 'vnet-deployment'
+//   params: {
+//     location: location
+//     vnetName: vnetName
+//     agentSubnetName: agentSubnetName
+//     peSubnetName: peSubnetName
+//     vnetAddressPrefix: vnetAddressPrefix
+//     agentSubnetPrefix: agentSubnetPrefix
+//     peSubnetPrefix: peSubnetPrefix
+//   }
+// }
 
 // Use existing VNet if requested
-module existingVNet 'existing-vnet.bicep' = if (useExistingVnet) {
+module existingVNet 'existing-vnet.bicep' = {
   name: 'existing-vnet-deployment'
   params: {
     vnetName: vnetName
@@ -57,11 +57,11 @@ module existingVNet 'existing-vnet.bicep' = if (useExistingVnet) {
 }
 
 // Provide unified outputs regardless of which module was used
-output virtualNetworkName string = useExistingVnet ? existingVNet.outputs.virtualNetworkName : newVNet.outputs.virtualNetworkName
-output virtualNetworkId string = useExistingVnet ? existingVNet.outputs.virtualNetworkId : newVNet.outputs.virtualNetworkId
-output virtualNetworkSubscriptionId string = useExistingVnet ? existingVNet.outputs.virtualNetworkSubscriptionId : newVNet.outputs.virtualNetworkSubscriptionId
-output virtualNetworkResourceGroup string = useExistingVnet ? existingVNet.outputs.virtualNetworkResourceGroup : newVNet.outputs.virtualNetworkResourceGroup
+output virtualNetworkName string =existingVNet.outputs.virtualNetworkName
+output virtualNetworkId string =existingVNet.outputs.virtualNetworkId
+output virtualNetworkSubscriptionId string =existingVNet.outputs.virtualNetworkSubscriptionId
+output virtualNetworkResourceGroup string =existingVNet.outputs.virtualNetworkResourceGroup
 output agentSubnetName string = agentSubnetName
 output peSubnetName string = peSubnetName
-output agentSubnetId string = useExistingVnet ? existingVNet.outputs.agentSubnetId : newVNet.outputs.agentSubnetId
-output peSubnetId string = useExistingVnet ? existingVNet.outputs.peSubnetId : newVNet.outputs.peSubnetId
+output agentSubnetId string = existingVNet.outputs.agentSubnetId
+output peSubnetId string = existingVNet.outputs.peSubnetId

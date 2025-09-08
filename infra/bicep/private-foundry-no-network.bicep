@@ -38,6 +38,7 @@ param modelCapacity int = 30
 // Create a short, unique suffix, that will be unique to each resource group
 param deploymentTimestamp string = utcNow('yyyyMMddHHmmss')
 var uniqueSuffix = substring(uniqueString('${resourceGroup().id}-${deploymentTimestamp}'), 0, 4)
+// var uniqueSuffix = substring(uniqueString('${resourceGroup().id}-${deploymentTimestamp}'), 0, 4)
 var accountName = toLower('${aiServices}${uniqueSuffix}')
 
 @description('Name for your project resource.')
@@ -83,11 +84,24 @@ param peSubnetPrefix string = ''
 //@description('Optional: Resource group containing existing private DNS zones. If specified, DNS zones will not be created.')
 //param existingDnsZonesResourceGroup string = ''
 
-@description('Object mapping DNS zone names to their resource group, or empty string to indicate creation')
-param existingDnsZones object
+// @description('Object mapping DNS zone names to their resource group, or empty string to indicate creation')
+// param existingDnsZones object
 
-@description('Zone Names for Validation of existing Private Dns Zones')
-param dnsZoneNames array
+// @description('Zone Names for Validation of existing Private Dns Zones')
+// param dnsZoneNames array
+
+@description('Public network access setting during account creation')
+@allowed([
+  'Enabled'
+  'Disabled'
+])
+param publicNetworkAccessAtCreate string = 'Disabled'
+
+@description('Use Microsoft-managed network instead of VNet injection for the AI account')
+param useMicrosoftManagedNetwork bool = false
+
+@description('Whether to configure network injection at create time')
+param networkInjection bool = true
 
 
 var projectName = toLower('${firstProjectName}${uniqueSuffix}')
@@ -143,7 +157,7 @@ module vnet 'modules-network-secured/network-agent-vnet.bicep' = {
 /*
   Create the AI Services account and gpt-4o model deployment
 */
-module aiAccount 'modules-network-secured/ai-account-identity.bicep' = {
+module aiAccount 'modules-network-secured-no-deps/ai-account-identity-no-injection.bicep' = {
   name: 'ai-${accountName}-${uniqueSuffix}-deployment'
   params: {
     // workspace organization
@@ -155,6 +169,9 @@ module aiAccount 'modules-network-secured/ai-account-identity.bicep' = {
     modelSkuName: modelSkuName
     modelCapacity: modelCapacity
     agentSubnetId: vnet.outputs.agentSubnetId
+    publicNetworkAccessAtCreate: publicNetworkAccessAtCreate
+    useMicrosoftManagedNetwork: useMicrosoftManagedNetwork
+    networkInjection: networkInjection
   }
 }
 /*
@@ -219,32 +236,32 @@ module aiAccount 'modules-network-secured/ai-account-identity.bicep' = {
 // 2. Sets up private DNS zones for each service
 // 3. Links private DNS zones to the VNet for name resolution
 // 4. Configures network policies to restrict access to private endpoints only
-module privateEndpointAndDNS 'modules-network-secured-no-deps/private-endpoint-and-dns.bicep' = {
-    name: '${uniqueSuffix}-private-endpoint'
-    params: {
-      aiAccountName: aiAccount.outputs.accountName    // AI Services to secure
-      // aiSearchName: aiDependencies.outputs.aiSearchName       // AI Search to secure
-      // storageName: aiDependencies.outputs.azureStorageName        // Storage to secure
-      // cosmosDBName:aiDependencies.outputs.cosmosDBName
-      vnetName: vnet.outputs.virtualNetworkName    // VNet containing subnets
-      peSubnetName: vnet.outputs.peSubnetName        // Subnet for private endpoints
-      suffix: uniqueSuffix                                    // Unique identifier
-      vnetResourceGroupName: vnet.outputs.virtualNetworkResourceGroup
-      vnetSubscriptionId: vnet.outputs.virtualNetworkSubscriptionId // Subscription ID for the VNet
-      // cosmosDBSubscriptionId: cosmosDBSubscriptionId // Subscription ID for Cosmos DB
-      // cosmosDBResourceGroupName: cosmosDBResourceGroupName // Resource Group for Cosmos DB
-      // aiSearchSubscriptionId: aiSearchServiceSubscriptionId // Subscription ID for AI Search Service
-      // aiSearchResourceGroupName: aiSearchServiceResourceGroupName // Resource Group for AI Search Service
-      // storageAccountResourceGroupName: azureStorageResourceGroupName // Resource Group for Storage Account
-      // storageAccountSubscriptionId: azureStorageSubscriptionId // Subscription ID for Storage Account
-      existingDnsZones: existingDnsZones
-    }
-    dependsOn: [
-    // aiSearch      // Ensure AI Search exists
-    // storage       // Ensure Storage exists
-    // cosmosDB      // Ensure Cosmos DB exists
-    ]
-  }
+// module privateEndpointAndDNS 'modules-network-secured-no-deps/private-endpoint-existing-dns.bicep' = {
+//     name: '${uniqueSuffix}-private-endpoint'
+//     params: {
+//       aiAccountName: aiAccount.outputs.accountName    // AI Services to secure
+//       // aiSearchName: aiDependencies.outputs.aiSearchName       // AI Search to secure
+//       // storageName: aiDependencies.outputs.azureStorageName        // Storage to secure
+//       // cosmosDBName:aiDependencies.outputs.cosmosDBName
+//       vnetName: vnet.outputs.virtualNetworkName    // VNet containing subnets
+//       peSubnetName: vnet.outputs.peSubnetName        // Subnet for private endpoints
+//       suffix: uniqueSuffix                                    // Unique identifier
+//       vnetResourceGroupName: vnet.outputs.virtualNetworkResourceGroup
+//       vnetSubscriptionId: vnet.outputs.virtualNetworkSubscriptionId // Subscription ID for the VNet
+//       // cosmosDBSubscriptionId: cosmosDBSubscriptionId // Subscription ID for Cosmos DB
+//       // cosmosDBResourceGroupName: cosmosDBResourceGroupName // Resource Group for Cosmos DB
+//       // aiSearchSubscriptionId: aiSearchServiceSubscriptionId // Subscription ID for AI Search Service
+//       // aiSearchResourceGroupName: aiSearchServiceResourceGroupName // Resource Group for AI Search Service
+//       // storageAccountResourceGroupName: azureStorageResourceGroupName // Resource Group for Storage Account
+//       // storageAccountSubscriptionId: azureStorageSubscriptionId // Subscription ID for Storage Account
+//       existingDnsZones: existingDnsZones
+//     }
+//     dependsOn: [
+//     // aiSearch      // Ensure AI Search exists
+//     // storage       // Ensure Storage exists
+//     // cosmosDB      // Ensure Cosmos DB exists
+//     ]
+//   }
 
 /*
   Creates a new project (sub-resource of the AI Services account)
@@ -273,7 +290,7 @@ module aiProject 'modules-network-secured-no-deps/ai-project-identity.bicep' = {
     accountName: aiAccount.outputs.accountName
   }
   dependsOn: [
-     privateEndpointAndDNS
+    //  privateEndpointAndDNS
     //  cosmosDB
     //  aiSearch
     //  storage
@@ -332,26 +349,26 @@ module formatProjectWorkspaceId 'modules-network-secured/format-project-workspac
 // }
 
 // This module creates the capability host for the project and account
-module addProjectCapabilityHost 'modules-network-secured/add-project-capability-host.bicep' = {
-  name: 'capabilityHost-configuration-${uniqueSuffix}-deployment'
-  params: {
-    accountName: aiAccount.outputs.accountName
-    projectName: aiProject.outputs.projectName
-    // cosmosDBConnection: aiProject.outputs.cosmosDBConnection
-    // azureStorageConnection: aiProject.outputs.azureStorageConnection
-    // aiSearchConnection: aiProject.outputs.aiSearchConnection
-    projectCapHost: projectCapHost
-  }
-  dependsOn: [
-    //  aiSearch      // Ensure AI Search exists
-    //  storage       // Ensure Storage exists
-    //  cosmosDB
-     privateEndpointAndDNS
-    //  cosmosAccountRoleAssignments
-    //  storageAccountRoleAssignment
-    //  aiSearchRoleAssignments
-  ]
-}
+// module addProjectCapabilityHost 'modules-network-secured/add-project-capability-host.bicep' = {
+//   name: 'capabilityHost-configuration-${uniqueSuffix}-deployment'
+//   params: {
+//     accountName: aiAccount.outputs.accountName
+//     projectName: aiProject.outputs.projectName
+//     // cosmosDBConnection: aiProject.outputs.cosmosDBConnection
+//     // azureStorageConnection: aiProject.outputs.azureStorageConnection
+//     // aiSearchConnection: aiProject.outputs.aiSearchConnection
+//     projectCapHost: toLower('${projectCapHost}-${projectName}')
+//   }
+//   dependsOn: [
+//     //  aiSearch      // Ensure AI Search exists
+//     //  storage       // Ensure Storage exists
+//     //  cosmosDB
+//      privateEndpointAndDNS
+//     //  cosmosAccountRoleAssignments
+//     //  storageAccountRoleAssignment
+//     //  aiSearchRoleAssignments
+//   ]
+// }
 
 // // The Storage Blob Data Owner role must be assigned after the caphost is created
 // module storageContainersRoleAssignment 'modules-network-secured/blob-storage-container-role-assignments.bicep' = {

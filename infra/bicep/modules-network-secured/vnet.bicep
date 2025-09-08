@@ -61,12 +61,14 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
               }
             }
           ]
+          privateEndpointNetworkPolicies: 'Enabled'
         }
       }
       {
         name: peSubnetName
         properties: {
           addressPrefix: peSubnet
+          privateEndpointNetworkPolicies: 'Disabled'
         }
       }
     ]

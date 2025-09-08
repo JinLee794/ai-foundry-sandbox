@@ -13,16 +13,16 @@ var vectorStoreConnections = ['${aiSearchConnection}']
 resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = {
    name: accountName
 }
-resource accountCapabilitiesHost 'Microsoft.CognitiveServices/accounts/capabilityHosts@2025-06-01' = {
-  name: '${accountName}-caphost'
-  parent: account
-  properties: {
-    capabilityHostKind: 'Agents'
-    // vectorStoreConnections: vectorStoreConnections
-    // storageConnections: storageConnections
-    // threadStorageConnections: threadConnections
-  }
-}
+// resource accountCapabilitiesHost 'Microsoft.CognitiveServices/accounts/capabilityHosts@2025-06-01' = {
+//   name: '${accountName}-caphost'
+//   parent: account
+//   properties: {
+//     capabilityHostKind: 'Agents'
+//     // vectorStoreConnections: vectorStoreConnections
+//     // storageConnections: storageConnections
+//     // threadStorageConnections: threadConnections
+//   }
+// }
 
 // resource project 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' existing = {
 //   name: projectName

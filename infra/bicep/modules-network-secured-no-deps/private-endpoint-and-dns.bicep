@@ -1,40 +1,37 @@
 /*
-Private Endpoint and DNS Configuration Module
-------------------------------------------
-This module configures private network access for Azure services using:
+Private Endpoint Configuration Module (Existing Resources Only)
+--------------------------------------------------------------
+This module creates private endpoints for Azure services using existing:
 
-1. Private Endpoints:
-   - Creates network interfaces in the specified subnet
-   - Establishes private connections to Azure services
-   - Enables secure access without public internet exposure
+1. Virtual Networks and Subnets (referenced, not created)
+2. Private DNS Zones (referenced, not created) 
+3. Network resources (assumed to exist)
 
-2. Private DNS Zones:
-   - Enables custom DNS resolution for private endpoints
+This module ONLY creates:
+- Private Endpoints for Azure services
 
-3. DNS Zone Links:
-   - Links private DNS zones to the VNet
-   - Enables name resolution for resources in the VNet
-   - Prevents DNS resolution conflicts
+This module does NOT create:
+- Private DNS Zones (must exist)
+- Virtual Network Links (must exist)
+- DNS Zone Groups (not created)
+- VNets or Subnets (must exist)
 
-Security Benefits:
-- Eliminates public internet exposure
-- Enables secure access from within VNet
-- Prevents data exfiltration through network
+Prerequisites:
+- Virtual Network and Private Endpoint subnet must exist
+- Private DNS zones must exist and be properly configured
+- DNS zone virtual network links must exist
 */
 
 // Resource names and identifiers
 @description('Name of the AI Foundry account')
 param aiAccountName string
-// @description('Name of the AI Search service')
-// param aiSearchName string
-// @description('Name of the storage account')
-// param storageName string
-// @description('Name of the Cosmos DB account')
-// param cosmosDBName string
-@description('Name of the Vnet')
+
+@description('Name of the Virtual Network')
 param vnetName string
-@description('Name of the Customer subnet')
+
+@description('Name of the Private Endpoint subnet')
 param peSubnetName string
+
 @description('Suffix for unique resource names')
 param suffix string
 
@@ -44,60 +41,18 @@ param vnetResourceGroupName string = resourceGroup().name
 @description('Subscription ID for Virtual Network')
 param vnetSubscriptionId string = subscription().subscriptionId
 
-// @description('Resource Group name for Storage Account')
-// param storageAccountResourceGroupName string = resourceGroup().name
-
-// @description('Subscription ID for Storage account')
-// param storageAccountSubscriptionId string = subscription().subscriptionId
-
-// @description('Subscription ID for AI Search service')
-// param aiSearchSubscriptionId string = subscription().subscriptionId
-
-// @description('Resource Group name for AI Search service')
-// param aiSearchResourceGroupName string = resourceGroup().name
-
-// @description('Subscription ID for Cosmos DB account')
-// param cosmosDBSubscriptionId string = subscription().subscriptionId
-
-// @description('Resource group name for Cosmos DB account')
-// param cosmosDBResourceGroupName string = resourceGroup().name
-
-@description('Map of DNS zone FQDNs to resource group names. If provided, reference existing DNS zones in this resource group instead of creating them.')
-param existingDnsZones object = {
-  'privatelink.services.ai.azure.com': ''
-  'privatelink.openai.azure.com': ''
-  'privatelink.cognitiveservices.azure.com': ''
-  // 'privatelink.search.windows.net': ''
-  // 'privatelink.blob.${environment().suffixes.storage}': ''
-  // 'privatelink.documents.azure.com': ''
-}
-
 // ---- Resource references ----
 resource aiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
   name: aiAccountName
   scope: resourceGroup()
 }
 
-// resource aiSearch 'Microsoft.Search/searchServices@2023-11-01' existing = {
-//   name: aiSearchName
-//   scope: resourceGroup(aiSearchSubscriptionId, aiSearchResourceGroupName)
-// }
-
-// resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
-//   name: storageName
-//   scope: resourceGroup(storageAccountSubscriptionId, storageAccountResourceGroupName)
-// }
-
-// resource cosmosDBAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' existing = {
-//   name: cosmosDBName
-//   scope: resourceGroup(cosmosDBSubscriptionId, cosmosDBResourceGroupName)
-// }
-
 // Reference existing network resources
 resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: vnetName
   scope: resourceGroup(vnetSubscriptionId, vnetResourceGroupName)
 }
+
 resource peSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' existing = {
   parent: vnet
   name: peSubnetName
@@ -106,24 +61,44 @@ resource peSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' existin
 /* -------------------------------------------- AI Foundry Account Private Endpoint -------------------------------------------- */
 
 // Private endpoint for AI Services account
-// - Creates network interface in customer hub subnet
+// - Creates network interface in private endpoint subnet
 // - Establishes private connection to AI Services account
+// - Does NOT create DNS zone groups (assumes external DNS management)
 resource aiAccountPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
-  name: '${aiAccountName}-private-endpoint'
+  name: '${aiAccountName}-private-endpoint-${suffix}'
   location: resourceGroup().location
   properties: {
-    subnet: { id: peSubnet.id } // Deploy in customer hub subnet
+    subnet: { id: peSubnet.id }
     privateLinkServiceConnections: [
       {
         name: '${aiAccountName}-private-link-service-connection'
         properties: {
           privateLinkServiceId: aiAccount.id
-          groupIds: [ 'account' ] // Target AI Services account
+          groupIds: [ 'account' ]
         }
       }
     ]
   }
 }
+
+// Outputs
+@description('Resource ID of the AI Account Private Endpoint')
+output aiAccountPrivateEndpointId string = aiAccountPrivateEndpoint.id
+
+@description('Name of the AI Account Private Endpoint')
+output aiAccountPrivateEndpointName string = aiAccountPrivateEndpoint.name
+
+@description('Private IP address of the AI Account Private Endpoint')
+output aiAccountPrivateEndpointIP string = aiAccountPrivateEndpoint.properties.customDnsConfigs[0].ipAddresses[0]
+
+
+
+
+
+
+
+
+
 
 // /* -------------------------------------------- AI Search Private Endpoint -------------------------------------------- */
 

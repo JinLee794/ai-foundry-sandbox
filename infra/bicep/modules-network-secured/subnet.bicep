@@ -10,11 +10,16 @@ param addressPrefix string
 @description('Array of subnet delegations')
 param delegations array = []
 
+@description('Disable private endpoint network policies on this subnet')
+param disablePrivateEndpointNetworkPolicies bool = false
+
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
   name: '${vnetName}/${subnetName}'
   properties: {
     addressPrefix: addressPrefix
     delegations: delegations
+    // Only set when requested (for private endpoint subnets)
+    privateEndpointNetworkPolicies: disablePrivateEndpointNetworkPolicies ? 'Disabled' : 'Enabled'
   }
 }
 
