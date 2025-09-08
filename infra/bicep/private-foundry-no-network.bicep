@@ -134,30 +134,33 @@ var vnetResourceGroupName = existingVnetPassedIn ? vnetParts[4] : resourceGroup(
 var existingVnetName = existingVnetPassedIn ? last(vnetParts) : vnetName
 var trimVnetName = trim(existingVnetName)
 
+var agentSubnetId = existingVnetPassedIn ? '${existingVnetResourceId}/subnets/${agentSubnetName}' : resourceId('Microsoft.Network/virtualNetworks/subnets', trimVnetName, agentSubnetName)
+var peSubnetId = existingVnetPassedIn ? '${existingVnetResourceId}/subnets/${peSubnetName}' : resourceId('Microsoft.Network/virtualNetworks/subnets', trimVnetName, peSubnetName)
+
 @description('The name of the project capability host to be created')
 param projectCapHost string = 'caphostproj'
 
 // Create Virtual Network and Subnets
-module vnet 'modules-network-secured/network-agent-vnet.bicep' = {
-  name: 'vnet-${trimVnetName}-${uniqueSuffix}-deployment'
-  params: {
-    location: location
-    vnetName: trimVnetName
-    useExistingVnet: existingVnetPassedIn
-    existingVnetResourceGroupName: vnetResourceGroupName
-    agentSubnetName: agentSubnetName
-    peSubnetName: peSubnetName
-    vnetAddressPrefix: vnetAddressPrefix
-    agentSubnetPrefix: agentSubnetPrefix
-    peSubnetPrefix: peSubnetPrefix
-    existingVnetSubscriptionId: vnetSubscriptionId
-  }
-}
+// module vnet 'modules-network-secured/network-agent-vnet.bicep' = {
+//   name: 'vnet-${trimVnetName}-${uniqueSuffix}-deployment'
+//   params: {
+//     location: location
+//     vnetName: trimVnetName
+//     useExistingVnet: existingVnetPassedIn
+//     existingVnetResourceGroupName: vnetResourceGroupName
+//     agentSubnetName: agentSubnetName
+//     peSubnetName: peSubnetName
+//     vnetAddressPrefix: vnetAddressPrefix
+//     agentSubnetPrefix: agentSubnetPrefix
+//     peSubnetPrefix: peSubnetPrefix
+//     existingVnetSubscriptionId: vnetSubscriptionId
+//   }
+// }
 
 /*
   Create the AI Services account and gpt-4o model deployment
 */
-module aiAccount 'modules-network-secured-no-deps/ai-account-identity-no-injection.bicep' = {
+module aiAccount 'modules-network-secured/ai-account-identity.bicep' = {
   name: 'ai-${accountName}-${uniqueSuffix}-deployment'
   params: {
     // workspace organization
@@ -168,7 +171,7 @@ module aiAccount 'modules-network-secured-no-deps/ai-account-identity-no-injecti
     modelVersion: modelVersion
     modelSkuName: modelSkuName
     modelCapacity: modelCapacity
-    agentSubnetId: vnet.outputs.agentSubnetId
+    agentSubnetId: agentSubnetId
     publicNetworkAccessAtCreate: publicNetworkAccessAtCreate
     useMicrosoftManagedNetwork: useMicrosoftManagedNetwork
     networkInjection: networkInjection

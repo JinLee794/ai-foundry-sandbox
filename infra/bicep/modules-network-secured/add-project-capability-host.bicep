@@ -24,9 +24,9 @@ resource projectCapabilityHost 'Microsoft.CognitiveServices/accounts/projects/ca
   parent: project
   properties: {
     capabilityHostKind: 'Agents'
-    // vectorStoreConnections: vectorStoreConnections
-    // storageConnections: storageConnections
-    // threadStorageConnections: threadConnections
+    vectorStoreConnections: vectorStoreConnections
+    storageConnections: storageConnections
+    threadStorageConnections: threadConnections
   }
 }
 
