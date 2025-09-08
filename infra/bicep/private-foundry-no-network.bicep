@@ -349,26 +349,26 @@ module formatProjectWorkspaceId 'modules-network-secured/format-project-workspac
 // }
 
 // This module creates the capability host for the project and account
-// module addProjectCapabilityHost 'modules-network-secured/add-project-capability-host.bicep' = {
-//   name: 'capabilityHost-configuration-${uniqueSuffix}-deployment'
-//   params: {
-//     accountName: aiAccount.outputs.accountName
-//     projectName: aiProject.outputs.projectName
-//     // cosmosDBConnection: aiProject.outputs.cosmosDBConnection
-//     // azureStorageConnection: aiProject.outputs.azureStorageConnection
-//     // aiSearchConnection: aiProject.outputs.aiSearchConnection
-//     projectCapHost: toLower('${projectCapHost}-${projectName}')
-//   }
-//   dependsOn: [
-//     //  aiSearch      // Ensure AI Search exists
-//     //  storage       // Ensure Storage exists
-//     //  cosmosDB
-//      privateEndpointAndDNS
-//     //  cosmosAccountRoleAssignments
-//     //  storageAccountRoleAssignment
-//     //  aiSearchRoleAssignments
-//   ]
-// }
+module addProjectCapabilityHost 'modules-network-secured/add-project-capability-host.bicep' = {
+  name: 'capabilityHost-configuration-${uniqueSuffix}-deployment'
+  params: {
+    accountName: aiAccount.outputs.accountName
+    projectName: aiProject.outputs.projectName
+    // cosmosDBConnection: aiProject.outputs.cosmosDBConnection
+    // azureStorageConnection: aiProject.outputs.azureStorageConnection
+    // aiSearchConnection: aiProject.outputs.aiSearchConnection
+    projectCapHost: toLower('${projectCapHost}-${projectName}')
+  }
+  dependsOn: [
+    //  aiSearch      // Ensure AI Search exists
+    //  storage       // Ensure Storage exists
+    //  cosmosDB
+    //  privateEndpointAndDNS
+    //  cosmosAccountRoleAssignments
+    //  storageAccountRoleAssignment
+    //  aiSearchRoleAssignments
+  ]
+}
 
 // // The Storage Blob Data Owner role must be assigned after the caphost is created
 // module storageContainersRoleAssignment 'modules-network-secured/blob-storage-container-role-assignments.bicep' = {

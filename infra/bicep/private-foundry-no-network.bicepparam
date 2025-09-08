@@ -26,8 +26,8 @@ param displayName = 'privAIFoundryJinLENoNWProject2'
 // If you provide these, the deployment will use the existing resources instead of creating new ones
 param existingVnetResourceId = '/subscriptions/63862159-43c8-47f7-9f6f-6c63d56b0e17/resourceGroups/ai-priv-foundry-sandbox/providers/Microsoft.Network/virtualNetworks/priv-foundry-sandbox'
 param vnetName = 'priv-foundry-sandbox'
-param peSubnetName = 'pe-subnet'
-param agentSubnetName = 'agent-subnet'
+param peSubnetName = 'pe-subnet-nd'
+param agentSubnetName = 'agent-subnet-nd4'
 
 // Pass the DNS zone map here
 // Leave empty to create new DNS zone, add the resource group of existing DNS zone to use it
@@ -49,4 +49,4 @@ param agentSubnetName = 'agent-subnet'
 // If you provide existingVnetResourceId, these values will be ignored
 param vnetAddressPrefix = ''
 param peSubnetPrefix = '10.0.3.0/24'
-param agentSubnetPrefix = '10.0.6.0/24'
+param agentSubnetPrefix = '10.0.7.0/24'
