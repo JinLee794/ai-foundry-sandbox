@@ -325,11 +325,14 @@ cd ai-foundry-sandbox
 # Configure your deployment parameters
 # Edit infra/bicep/examples/private-foundry.test.bicepparam with your specific settings
 
-# Deploy the Bicep template for private networking
+# Deploy the Bicep template. If your virtual network and subnets are pre-created,
+# pass the subnet resource ID(s) via the `agentSubnetId` (and optionally
+# `privateEndpointSubnetId`) parameter. Example CLI invocation:
 az deployment group create \
-  --resource-group <your-resource-group> \
-  --template-file infra/bicep/private-foundry.bicep \
-  --parameters infra/bicep/examples/private-foundry.test.bicepparam
+    --resource-group <your-resource-group> \
+    --template-file infra/bicep/private-foundry.bicep \
+    --parameters infra/bicep/examples/private-foundry.test.bicepparam \
+    agentSubnetId='/subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.Network/virtualNetworks/<vnetName>/subnets/<agentSubnetName>'
 ```
 
 **Template Configuration (`private-foundry.test.bicepparam`):**
@@ -381,6 +384,8 @@ The Bicep template follows a modular architecture with the following components:
 - Target resource group must exist
 - Virtual network (if existing) must be in the same region as AI Foundry resources
 - Required Azure resource providers must be registered in your subscription
+
+Note: If you already have a virtual network and subnets configured, you can reuse them by passing the subnet resource ID(s) to the deployment (see `infra/bicep/examples/private-foundry.test.bicepparam` for an example). The templates also include a `foundry/network.bicep` module if you prefer to create the VNet and subnets as part of the deployment.
 
 ### 6. Recreate Connections and Agents
 - **Connection Recreation:** Manually recreate connections to external data sources and services
