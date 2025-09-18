@@ -40,7 +40,8 @@ param deploymentTimestamp string = utcNow('yyyyMMddHHmmss')
 var uniqueSuffix = substring(uniqueString('${resourceGroup().id}-${deploymentTimestamp}'), 0, 4)
 var accountName = toLower('${aiServices}${uniqueSuffix}')
 
-param projectCapHostName string 
+@description('The name of the project capability host to be created')
+param projectCapHostName string = 'caphostproj'
 
 @description('Name for your project resource.')
 param firstProjectName string = 'project'
@@ -90,8 +91,6 @@ var trimVnetName = trim(existingVnetName)
 
 var agentSubnetId = existingVnetPassedIn ? '${existingVnetResourceId}/subnets/${agentSubnetName}' : resourceId('Microsoft.Network/virtualNetworks/subnets', trimVnetName, agentSubnetName)
 
-@description('The name of the project capability host to be created')
-param projectCapHost string = 'caphostproj'
 
 /*
   Create the AI Services account and gpt-4o model deployment
