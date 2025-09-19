@@ -1,5 +1,6 @@
 /*
 This parameter file is used to deploy the private-foundry Bicep module.
+Dummy values have been used for any sensitive identifiers and region set to australiaeast (ause).
 
 Usage:
   az deployment group create -g <resource-group-name> --parameters private-foundry.test.bicepparam
@@ -22,19 +23,19 @@ param firstProjectName = 'projectnodepskv2'
 param projectDescription = 'A project for the AI Foundry account with network secured deployed Agent'
 param displayName = 'projectnodepskv2'
 
-// Resource IDs for existing resources
+// Resource IDs for existing resources (DUMMY values)
 // If you provide these, the deployment will use the existing resources instead of creating new ones
-param existingVnetResourceId = '/subscriptions/63862159-43c8-47f7-9f6f-6c63d56b0e17/resourceGroups/ai-priv-foundry-sandbox/providers/Microsoft.Network/virtualNetworks/priv-foundry-sandbox'
-param vnetName = 'priv-foundry-sandbox'
-param peSubnetName = 'pe-subnet-nd'
-param agentSubnetName = 'agent-subnet-nd'
+param existingVnetResourceId = '/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-example/providers/Microsoft.Network/virtualNetworks/vnet-example'
+param vnetName = 'vnet-example'
+param peSubnetName = 'pe-subnet-example'
+param agentSubnetName = 'agent-subnet-example'
 
 // Pass the DNS zone map here
 // Leave empty to create new DNS zone, add the resource group of existing DNS zone to use it
 param existingDnsZones = {
-  'privatelink.services.ai.azure.com': 'ai-foundry-test'
-  'privatelink.openai.azure.com': 'ai-foundry-test'
-  'privatelink.cognitiveservices.azure.com': 'ai-foundry-test'               
+  'privatelink.services.ai.azure.com': 'rg-dns-example'
+  'privatelink.openai.azure.com': 'rg-dns-example'
+  'privatelink.cognitiveservices.azure.com': 'rg-dns-example'               
                   
 }
 
@@ -48,6 +49,6 @@ param dnsZoneNames = [
 // Network configuration: only used when existingVnetResourceId is not provided
 // These addresses are only used when creating a new VNet and subnets
 // If you provide existingVnetResourceId, these values will be ignored
-param vnetAddressPrefix = ''
-param peSubnetPrefix = '10.0.3.0/24'
-param agentSubnetPrefix = '10.0.4.0/24'
+param vnetAddressPrefix = '10.1.0.0/16'
+param peSubnetPrefix = '10.1.3.0/24'
+param agentSubnetPrefix = '10.1.4.0/24'

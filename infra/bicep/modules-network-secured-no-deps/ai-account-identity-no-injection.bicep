@@ -42,12 +42,12 @@ resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
     publicNetworkAccess: publicNetworkAccessAtCreate
     // networkInjections expects an array of objects
     networkInjections: [
-      {
-        scenario: 'agent'
-        useMicrosoftManagedNetwork: false
-        // When using Microsoft-managed network, omit subnetArmId
-        subnetArmId: agentSubnetId
-      }
+      // {
+      //   scenario: 'agent'
+      //   useMicrosoftManagedNetwork: false
+      //   // When using Microsoft-managed network, omit subnetArmId
+      //   subnetArmId: agentSubnetId
+      // }
     ]
     // true is not supported today
     disableLocalAuth: false

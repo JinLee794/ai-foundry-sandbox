@@ -131,21 +131,25 @@ module aiProject 'modules-network-secured-no-deps/ai-project-identity.bicep' = {
   ]
 }
 
-// This module creates the capability host for the project and account
-module addProjectCapabilityHost 'modules-network-secured/add-project-capability-host.bicep' = {
-  name: 'capabilityHost-configuration-${uniqueSuffix}-deployment'
-  params: {
-    accountName: aiAccount.outputs.accountName
-    projectName: aiProject.outputs.projectName
-    projectCapHost: projectCapHostName
-  }
-  dependsOn: [
-    //  aiSearch      // Ensure AI Search exists
-    //  storage       // Ensure Storage exists
-    //  cosmosDB
-    //  privateEndpointAndDNS
-    //  cosmosAccountRoleAssignments
-    //  storageAccountRoleAssignment
-    //  aiSearchRoleAssignments
-  ]
-}
+// // This module creates the capability host for the project and account
+// REQUIRES vectorStoreConnections:
+// "message": "CreateCapabilityHostRequestDto is invalid: Agents CapabilityHost supports a single, non empty value for vectorStoreConnections property.; Agents CapabilityHost supports a single, non empty value for storageConnections property.; Agents CapabilityHost supports a single, non empty value for threadStorageConnections property.",
+
+// module addProjectCapabilityHost 'modules-network-secured/add-project-capability-host.bicep' = {
+//   name: 'capabilityHost-configuration-${uniqueSuffix}-deployment'
+//   params: {
+//     accountName: aiAccount.outputs.accountName
+//     projectName: aiProject.outputs.projectName
+//     projectCapHost: '${projectName}-caphost'
+//   }
+//   dependsOn: [
+//     aiProject
+//     //  aiSearch      // Ensure AI Search exists
+//     //  storage       // Ensure Storage exists
+//     //  cosmosDB
+//     //  privateEndpointAndDNS
+//     //  cosmosAccountRoleAssignments
+//     //  storageAccountRoleAssignment
+//     //  aiSearchRoleAssignments
+//   ]
+// }
