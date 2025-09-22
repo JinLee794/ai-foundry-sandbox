@@ -27,3 +27,6 @@ param existingVnetResourceId = '/subscriptions/00000000-0000-0000-0000-000000000
 param vnetName = 'demo-vnet'
 param agentSubnetName = 'agent-subnet-demo'
 
+param cosmosDBName = 'your-existing-cosmosdb-name'
+param aiSearchName = 'your-existing-aisearch-name'
+param azureStorageName = 'your-existing-azurestorage-name'
