@@ -12,6 +12,8 @@ param cosmosDBName string
 param cosmosDBSubscriptionId string
 param cosmosDBResourceGroupName string
 
+param userAssignedIdentityResourceId string
+
 param azureStorageName string
 param azureStorageSubscriptionId string
 param azureStorageResourceGroupName string
@@ -39,7 +41,10 @@ resource project 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-previ
   name: projectName
   location: location
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentityResourceId}': { }
+    }
   }
   properties: {
     description: projectDescription

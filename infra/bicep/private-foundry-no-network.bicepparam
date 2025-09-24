@@ -11,22 +11,24 @@ Ensure you have the necessary permissions and that the referenced Bicep module a
 
 using './private-foundry-no-network.bicep'
 
-param location = 'eastus'
-param aiServices = 'demo-ai-services'
-param modelName = 'gpt-demo'
+param location = 'eastus2'
+param aiServices = 'praifoundryjinlenonw2'
+param modelName = 'gpt-4o'
 param modelFormat = 'OpenAI'
 param modelVersion = '2024-11-20'
 param modelSkuName = 'GlobalStandard'
-param modelCapacity = 1
-param firstProjectName = 'demo-project-01'
-param projectDescription = 'Demo project for the AI Foundry account with network secured deployed Agent'
-param displayName = 'DemoFoundryProject01'
+param modelCapacity = 30
+param firstProjectName = 'praifoundryjinlenonwproj2'
+param projectDescription = 'A project for the AI Foundry account with network secured deployed Agent'
+param displayName = 'privAIFoundryJinLENoNWProject2'
 
-// Resource IDs for existing resources (dummy values)
-param existingVnetResourceId = '/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/demo-rg/providers/Microsoft.Network/virtualNetworks/demo-vnet'
-param vnetName = 'demo-vnet'
-param agentSubnetName = 'agent-subnet-demo'
+// Resource IDs for existing resources
+param existingVnetResourceId = '/subscriptions/63862159-43c8-47f7-9f6f-6c63d56b0e17/resourceGroups/ai-priv-foundry-sandbox/providers/Microsoft.Network/virtualNetworks/priv-foundry-sandbox'
+param vnetName = 'priv-foundry-sandbox'
+param agentSubnetName = 'manual-agent-subnet'
 
-param cosmosDBName = 'your-existing-cosmosdb-name'
-param aiSearchName = 'your-existing-aisearch-name'
-param azureStorageName = 'your-existing-azurestorage-name'
+param cosmosDBName = 'privfoundrycosmosdb'
+param aiSearchName = 'privfoundryaisearch'
+param azureStorageName = 'privfoundrystorage'
+
+param userAssignedIdentityResourceId = '/subscriptions/63862159-43c8-47f7-9f6f-6c63d56b0e17/resourceGroups/ai-priv-foundry-sandbox/providers/Microsoft.ManagedIdentity/userAssignedIdentities/priv-foundry-identity'
