@@ -12,7 +12,7 @@ param cosmosDBName string
 param cosmosDBSubscriptionId string
 param cosmosDBResourceGroupName string
 
-param userAssignedIdentityResourceId string
+// param userAssignedIdentityResourceId string
 
 param azureStorageName string
 param azureStorageSubscriptionId string
