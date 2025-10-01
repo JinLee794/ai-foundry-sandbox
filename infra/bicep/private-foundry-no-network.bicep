@@ -38,7 +38,7 @@ param modelCapacity int = 30
 // Create a short, unique suffix, that will be unique to each resource group
 param deploymentTimestamp string = utcNow('yyyyMMddHHmmss')
 var uniqueSuffix = substring(uniqueString('${resourceGroup().id}-${deploymentTimestamp}'), 0, 4)
-var accountName = toLower('${aiServices}${uniqueSuffix}')
+var accountName = toLower('${aiServices}')
 
 @description('The name of the project capability host to be created')
 param projectCapHostName string = 'caphostproj'
@@ -81,7 +81,7 @@ param networkInjection bool = true
 
 param userAssignedIdentityResourceId string
 
-var projectName = toLower('${firstProjectName}${uniqueSuffix}')
+var projectName = toLower('${firstProjectName}')
 
 var existingVnetPassedIn = existingVnetResourceId != ''
 
@@ -97,7 +97,7 @@ var agentSubnetId = existingVnetPassedIn ? '${existingVnetResourceId}/subnets/${
   Create the AI Services account and gpt-4o model deployment
 */
 module aiAccount 'modules-network-secured/ai-account-identity.bicep' = {
-  name: 'ai-${accountName}-${uniqueSuffix}-deployment'
+  name: 'ai-${accountName}-deployment'
   params: {
     // workspace organization
     accountName: accountName
@@ -118,7 +118,7 @@ module aiAccount 'modules-network-secured/ai-account-identity.bicep' = {
   Creates a new project (sub-resource of the AI Services account)
 */
 // module aiProject 'modules-network-secured-no-deps/ai-project-identity.bicep' = {
-//   name: 'ai-${projectName}-${uniqueSuffix}-deployment'
+//   name: 'ai-${projectName}-deployment'
 //   params: {
 //     // workspace organization
 //     projectName: projectName
@@ -157,7 +157,7 @@ param cosmosDBName string
 
 
 module aiProject 'modules-network-secured/ai-project-identity.bicep' = {
-  name: 'ai-${projectName}-${uniqueSuffix}-deployment'
+  name: 'ai-${projectName}-deployment'
   params: {
     // workspace organization
     projectName: projectName
@@ -168,7 +168,7 @@ module aiProject 'modules-network-secured/ai-project-identity.bicep' = {
     aiSearchServiceResourceGroupName: resourceGroup().name
     aiSearchServiceSubscriptionId: subscription().subscriptionId
 
-    userAssignedIdentityResourceId: userAssignedIdentityResourceId
+    // userAssignedIdentityResourceId: userAssignedIdentityResourceId
     cosmosDBName: cosmosDBName
     cosmosDBSubscriptionId: subscription().subscriptionId
     cosmosDBResourceGroupName: resourceGroup().name
@@ -182,25 +182,25 @@ module aiProject 'modules-network-secured/ai-project-identity.bicep' = {
 }
 
 
-// This module creates the capability host for the project and account
-module addProjectCapabilityHost 'modules-network-secured/add-project-capability-host.bicep' = {
-  name: 'capabilityHost-configuration-${uniqueSuffix}-deployment'
-  params: {
-    accountName: aiAccount.outputs.accountName
-    projectName: aiProject.outputs.projectName
+// // This module creates the capability host for the project and account
+// module addProjectCapabilityHost 'modules-network-secured/add-project-capability-host.bicep' = {
+//   name: 'capabilityHost-configuration-deployment'
+//   params: {
+//     accountName: aiAccount.outputs.accountName
+//     projectName: aiProject.outputs.projectName
 
-    cosmosDBConnection: aiProject.outputs.cosmosDBConnection
-    azureStorageConnection: aiProject.outputs.azureStorageConnection
-    aiSearchConnection: aiProject.outputs.aiSearchConnection
-    projectCapHost: projectCapHostName
-  }
-  dependsOn: [
-  ]
-}
+//     cosmosDBConnection: aiProject.outputs.cosmosDBConnection
+//     azureStorageConnection: aiProject.outputs.azureStorageConnection
+//     aiSearchConnection: aiProject.outputs.aiSearchConnection
+//     projectCapHost: projectCapHostName
+//   }
+//   dependsOn: [
+//   ]
+// }
 
 
 // module formatProjectWorkspaceId 'modules-network-secured/format-project-workspace-id.bicep' = {
-//   name: 'format-project-workspace-id-${uniqueSuffix}-deployment'
+//   name: 'format-project-workspace-id-deployment'
 //   params: {
 //     projectWorkspaceId: aiProject.outputs.projectWorkspaceId
 //   }
@@ -210,7 +210,7 @@ module addProjectCapabilityHost 'modules-network-secured/add-project-capability-
 //   Assigns the project SMI the storage blob data contributor role on the storage account
 // */
 // module storageAccountRoleAssignment 'modules-network-secured/azure-storage-account-role-assignment.bicep' = {
-//   name: 'storage-${azureStorageName}-${uniqueSuffix}-deployment'
+//   name: 'storage-${azureStorageName}-deployment'
 //   scope: resourceGroup()
 //   params: {
 //     azureStorageName: azureStorageName
@@ -223,7 +223,7 @@ module addProjectCapabilityHost 'modules-network-secured/add-project-capability-
 
 // // The Comos DB Operator role must be assigned before the caphost is created
 // module cosmosAccountRoleAssignments 'modules-network-secured/cosmosdb-account-role-assignment.bicep' = {
-//   name: 'cosmos-account-ra-${projectName}-${uniqueSuffix}-deployment'
+//   name: 'cosmos-account-ra-${projectName}-deployment'
 //   scope: resourceGroup()
 //   params: {
 //     cosmosDBName: cosmosDBName
@@ -236,7 +236,7 @@ module addProjectCapabilityHost 'modules-network-secured/add-project-capability-
 
 // // This role can be assigned before or after the caphost is created
 // module aiSearchRoleAssignments 'modules-network-secured/ai-search-role-assignments.bicep' = {
-//   name: 'ai-search-ra-${projectName}-${uniqueSuffix}-deployment'
+//   name: 'ai-search-ra-${projectName}-deployment'
 //   scope: resourceGroup()
 //   params: {
 //     aiSearchName: aiSearchName
@@ -249,7 +249,7 @@ module addProjectCapabilityHost 'modules-network-secured/add-project-capability-
 
 // // The Storage Blob Data Owner role must be assigned after the caphost is created
 // module storageContainersRoleAssignment 'modules-network-secured/blob-storage-container-role-assignments.bicep' = {
-//   name: 'storage-containers-${uniqueSuffix}-deployment'
+//   name: 'storage-containers-deployment'
 //   scope: resourceGroup()
 //   params: {
 //     aiProjectPrincipalId: aiProject.outputs.projectPrincipalId
@@ -263,7 +263,7 @@ module addProjectCapabilityHost 'modules-network-secured/add-project-capability-
 
 // // The Cosmos Built-In Data Contributor role must be assigned after the caphost is created
 // module cosmosContainerRoleAssignments 'modules-network-secured/cosmos-container-role-assignments.bicep' = {
-//   name: 'cosmos-ra-${uniqueSuffix}-deployment'
+//   name: 'cosmos-ra-deployment'
 //   scope: resourceGroup()
 //   params: {
 //     cosmosAccountName: cosmosDBName
