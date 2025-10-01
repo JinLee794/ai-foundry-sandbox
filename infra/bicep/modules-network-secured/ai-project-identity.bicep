@@ -41,10 +41,11 @@ resource project 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-previ
   name: projectName
   location: location
   identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${userAssignedIdentityResourceId}': { }
-    }
+    type: 'SystemAssigned'
+    // type: 'UserAssigned'
+    // userAssignedIdentities: {
+    //   '${userAssignedIdentityResourceId}': { }
+    // }
   }
   properties: {
     description: projectDescription
